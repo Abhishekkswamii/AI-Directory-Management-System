@@ -1,0 +1,20 @@
+# LUMINA
+
+node_modules/
+dist/
+build/
+.DS_Store
+*.log
+.env
+.env.local
+*.db
+chroma_db/
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+.vscode/
+.idea/
+uploads/
+organized/
