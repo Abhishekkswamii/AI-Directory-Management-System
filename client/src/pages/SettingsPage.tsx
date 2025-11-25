@@ -15,7 +15,7 @@ export function SettingsPage() {
 
   useEffect(() => {
     // Load settings from backend
-    fetch('http://localhost:8001/api/settings')
+    fetch('http://localhost:8000/api/settings')
       .then(res => res.json())
       .then(data => {
         console.log('[Settings] Loaded from backend:', data)
@@ -32,7 +32,7 @@ export function SettingsPage() {
     setSaveMessage('')
     
     try {
-      const response = await fetch('http://localhost:8001/api/settings', {
+      const response = await fetch('http://localhost:8000/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
