@@ -1,0 +1,58 @@
+[tool.poetry]
+name = "aether"
+version = "1.0.0"
+description = "✨ Aether - Your AI file butler. Reads, understands, and organizes your files like a genius librarian."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+license = "MIT"
+keywords = ["ai", "file-organizer", "automation", "productivity", "machine-learning"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business :: Financial",
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+typer = {extras = ["all"], version = "^0.9.0"}
+rich = "^13.7.0"
+sqlmodel = "^0.0.14"
+chromadb = "^0.4.22"
+openai = "^1.10.0"
+pypdf2 = "^3.0.1"
+python-docx = "^1.1.0"
+pillow = "^10.2.0"
+pytesseract = "^0.3.10"
+python-magic-bin = {version = "^0.4.14", markers = "sys_platform == 'win32'"}
+sentence-transformers = "^2.3.1"
+pydantic = "^2.5.3"
+pydantic-settings = "^2.1.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.4"
+black = "^24.1.1"
+ruff = "^0.1.14"
+mypy = "^1.8.0"
+
+[tool.poetry.scripts]
+aether = "aether.main:app"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
