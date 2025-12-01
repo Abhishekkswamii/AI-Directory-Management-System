@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LUMINA Backend Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .test-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #0f3460;
+        }
+        button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #4f46e5;
+        }
+        .result {
+            background: #0f3460;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🧪 LUMINA Backend Test</h1>
+    
+    <div class="test-section">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test /api/health</button>
+        <div id="health-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Analyze Endpoint (Empty)</h2>
+        <button onclick="testAnalyzeEmpty()">Test /api/analyze (empty)</button>
+        <div id="analyze-empty-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Analyze Endpoint (With Files)</h2>
+        <button onclick="testAnalyzeWithFiles()">Test /api/analyze (with test files)</button>
+        <div id="analyze-files-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
+                const data = await response.json();
+                resultDiv.className = 'result success';
+                resultDiv.textContent = `✅ SUCCESS\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ ERROR\n${error.message}`;
+            }
+        }
+
+        async function testAnalyzeEmpty() {
+            const resultDiv = document.getElementById('analyze-empty-result');
+            resultDiv.textContent = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ files: [] })
+                });
+                const data = await response.json();
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ ERROR\n${error.message}`;
+            }
+        }
+
+        async function testAnalyzeWithFiles() {
+            const resultDiv = document.getElementById('analyze-files-result');
+            resultDiv.textContent = 'Testing...';
+            
+            const testFiles = [
+                {
+                    id: 'test-1',
+                    name: 'test.txt',
+                    path: 'test.txt',
+                    type: 'txt',
+                    size: 100,
+                    extractedText: 'This is a test file for testing purposes.'
+                },
+                {
+                    id: 'test-2',
+                    name: 'document.pdf',
+                    path: 'documents/document.pdf',
+                    type: 'pdf',
+                    size: 5000,
+                    extractedText: 'This is a PDF document about finance and taxes for 2024.'
+                }
+            ];
+            
+            try {
+                const response = await fetch(`${API_URL}/api/analyze`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ files: testFiles })
+                });
+                const data = await response.json();
+                resultDiv.className = 'result ' + (response.ok ? 'success' : 'error');
+                resultDiv.textContent = `${response.ok ? '✅' : '❌'} Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ ERROR\n${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+@import url('https://api.fontshare.com/v2/css?f[]=satoshi@1,900,700,500,301,701,300,501,401,901,400,2&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-lumina-gray-200;
+  }
+  
+  body {
+    @apply bg-lumina-offwhite text-lumina-gray-900 font-sans antialiased;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-lumina-gray-100;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-lumina-gray-300 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-lumina-gray-400;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-xl border border-lumina-gray-200 rounded-2xl shadow-glass;
+  }
+
+  .glass-card-hover {
+    @apply glass-card hover:shadow-glass-lg hover:scale-[1.02] transition-all duration-300;
+  }
+
+  .gradient-text {
+    @apply bg-gradient-to-r from-lumina-sky via-lumina-lavender to-lumina-peach bg-clip-text text-transparent;
+  }
+
+  .gradient-bg {
+    @apply bg-gradient-to-br from-lumina-sky/10 via-lumina-lavender/10 to-lumina-peach/10;
+  }
+
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl bg-gradient-to-r from-lumina-sky to-lumina-lavender text-white font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl bg-white border-2 border-lumina-gray-200 text-lumina-gray-700 font-medium hover:border-lumina-sky transition-all duration-300;
+  }
+
+  /* Window controls */
+  .window-controls {
+    @apply flex items-center gap-2 p-4;
+    -webkit-app-region: drag;
+  }
+
+  .window-controls button {
+    -webkit-app-region: no-drag;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

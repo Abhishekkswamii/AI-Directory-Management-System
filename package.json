@@ -1,0 +1,53 @@
+{
+  "name": "lumina",
+  "version": "1.0.0",
+  "description": "LUMINA – AI That Organizes Your Entire Digital Life",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:client\" \"npm run dev:server\" \"npm run dev:electron\"",
+    "dev:client": "cd client && npm run dev",
+    "dev:server": "cd server && uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:electron": "wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .",
+    "build": "cd client && npm run build",
+    "build:electron": "npm run build && electron-builder",
+    "package": "electron-builder --dir",
+    "make": "electron-builder",
+    "install:all": "npm install && cd client && npm install && cd ../server && pip install -r requirements.txt"
+  },
+  "build": {
+    "appId": "com.lumina.app",
+    "productName": "LUMINA",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "client/dist/**/*"
+    ],
+    "win": {
+      "target": ["nsis"],
+      "icon": "client/public/icon.ico"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "client/public/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "icon": "client/public/icon.png",
+      "category": "Utility"
+    }
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "wait-on": "^7.2.0"
+  }
+}
