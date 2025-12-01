@@ -1,37 +1,97 @@
 # 🌟 LUMINA - AI-Powered File Organization System
 
-**LUMINA** is an intelligent file organization system that uses AI to automatically categorize and structure your files into a logical hierarchy. Built with React, FastAPI, and powered by AI (Ollama or Gemini), LUMINA transforms chaotic directories into beautifully organized structures.
+<div align="center">
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Node](https://img.shields.io/badge/node-18+-green.svg)
+![React](https://img.shields.io/badge/react-18+-61dafb.svg)
+![FastAPI](https://img.shields.io/badge/fastapi-0.100+-009688.svg)
+
+**LUMINA** is an intelligent, AI-powered file organization system that automatically categorizes and structures your files into a logical hierarchy. Built with React, FastAPI, and Electron, powered by Ollama or Gemini AI.
+
+[Features](#-features) • [Quick Start](#-quick-start) • [Installation](#-installation) • [Usage](#-usage) • [Deployment](#-deployment) • [Troubleshooting](#-troubleshooting)
+
+</div>
 
 ---
 
 ## 📋 Table of Contents
 
-- [Features](#-features)
-- [Quick Start](#-quick-start)
-- [Environment Setup](#-environment-setup)
-- [Installation](#-installation)
-- [Running the Application](#-running-the-application)
-- [AI Configuration](#-ai-configuration)
-- [Deployment](#-deployment)
-- [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [License](#-license)
+- [✨ Features](#-features)
+- [🏗️ Architecture](#️-architecture)
+- [🚀 Quick Start](#-quick-start)
+- [📥 Installation](#-installation)
+- [⚙️ Configuration](#️-configuration)
+- [▶️ Running the Application](#️-running-the-application)
+- [🤖 AI Setup](#-ai-setup)
+- [🌐 Deployment](#-deployment)
+- [🛠️ Development](#️-development)
+- [🐛 Troubleshooting](#-troubleshooting)
+- [📚 API Documentation](#-api-documentation)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
 
 ---
 
 ## ✨ Features
 
+### Core Capabilities
+- 🧠 **AI-Powered Organization** - Intelligent file categorization using Ollama or Gemini
+- 🔍 **Semantic Search** - Natural language file search with vector embeddings
+- 📊 **Smart Hierarchy** - Automatically creates 3-level organization structures
+- 📦 **Multi-Format Support** - PDF, DOCX, images (with OCR), text files, and more
+- 🗄️ **Collection Management** - Save, view, and manage multiple organizations
+
+### User Experience
 - 🎨 **Cosmic UI Design** - Futuristic interface with glassmorphism and nebula gradients
-- 🧠 **AI-Powered Organization** - Smart categorization using Ollama or Gemini
-- 🔍 **Semantic Search** - Find files using natural language
-- 📦 **Export Options** - Download as ZIP or write back to file system
+- 🖥️ **Desktop & Web** - Runs as Electron desktop app or in browser
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile
+- 🎯 **Drag & Drop** - Intuitive file upload interface
+- ⚡ **Real-time Updates** - Live progress tracking during organization
+
+### Technical Features
 - 🌐 **Dual AI Support** - Choose between local (Ollama) or cloud (Gemini) AI
-- 📱 **Responsive Design** - Works on desktop and mobile
-- 🗄️ **Collection History** - View and manage past organizations
+- 🔒 **Privacy Focused** - Local AI option keeps your data private
+- 💾 **Export Options** - Download as ZIP or write back to file system
+- 🔄 **Batch Processing** - Handle thousands of files efficiently
+- 📈 **Progress Tracking** - Real-time status updates with percentage completion
+
+---
+
+## 🏗️ Architecture
+
+LUMINA follows a modern full-stack architecture:
+
+```
+┌──────────────────────────────────────────────────────┐
+│  Frontend (React + TypeScript + Vite)                │
+│  ├─ UI Components (Glassmorphic Design)             │
+│  ├─ State Management (Zustand)                      │
+│  └─ File Processing (PDF.js, Mammoth, Tesseract)    │
+└──────────────────┬───────────────────────────────────┘
+                   │ REST API
+┌──────────────────▼───────────────────────────────────┐
+│  Backend (FastAPI + Python)                          │
+│  ├─ API Endpoints                                    │
+│  ├─ File Scanner & Extractor                        │
+│  ├─ AI Thinker (Organization Logic)                 │
+│  └─ Database Management                             │
+└──────────┬───────────────────┬───────────────────────┘
+           │                   │
+┌──────────▼────────┐  ┌──────▼──────────────┐
+│  SQLite Database  │  │  ChromaDB (Vectors) │
+│  (Metadata)       │  │  (Semantic Search)  │
+└───────────────────┘  └─────────────────────┘
+           │
+┌──────────▼───────────────────────────────────────────┐
+│  AI Services                                         │
+│  ├─ Ollama (Local) - llama3.2, nomic-embed-text    │
+│  └─ Gemini (Cloud) - gemini-pro, embedding-001     │
+└──────────────────────────────────────────────────────┘
+```
+
+For detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -39,120 +99,67 @@
 
 ### Prerequisites
 
-Before you begin, ensure you have:
-- **Node.js** 18 or higher ([Download](https://nodejs.org/))
-- **Python** 3.11 or higher ([Download](https://www.python.org/downloads/))
+Ensure you have the following installed:
+- **Node.js** 18+ ([Download](https://nodejs.org/))
+- **Python** 3.11+ ([Download](https://www.python.org/downloads/))
 - **Git** ([Download](https://git-scm.com/downloads))
 
-### Choose Your AI Provider
+### AI Provider Selection
 
-LUMINA supports two AI providers:
+| Provider | Setup Time | Cost | Privacy | Best For |
+|----------|-----------|------|---------|----------|
+| **Ollama** | 10-15 min | Free | 🔒 Local | Privacy, offline use |
+| **Gemini** | 2 min | Free tier | ☁️ Cloud | Quick setup, no install |
 
-| Provider | Pros | Cons | Best For |
-|----------|------|------|----------|
-| **Ollama** | Free, private, offline | Requires installation | Privacy-conscious users |
-| **Gemini** | No setup, fast | Requires API key | Quick setup, cloud users |
+### One-Line Install
 
----
-
-## 🔧 Environment Setup
-
-### Step 1: Clone the Repository
-
+**macOS/Linux:**
 ```bash
-git clone https://github.com/Abhishekkswamii/AI-Directory-Management-System
-cd AI-Directory-Managment-System
+git clone https://github.com/Abhishekkswamii/AI-Directory-Management-System.git && \
+cd AI-Directory-Managment-System && \
+chmod +x setup.sh && ./setup.sh
 ```
 
-### Step 2: Create Environment Files
-
-You need to create `.env` files in both `server/` and `client/` directories.
-
-#### **Server Environment** (`server/.env`)
-
-```bash
-# Navigate to server directory
-cd server
-
-# Create .env file from example
-cp .env.example .env
-```
-
-Edit `server/.env` and configure both AI providers:
-
-```env
-# Environment Configuration
-ENVIRONMENT=development
-
-# AI Provider Configuration
-# Set to "ollama" (local AI) or "gemini" (cloud AI)
-AI_PROVIDER=ollama
-
-# Ollama Configuration (for local AI - free & private)
-OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2
-OLLAMA_EMBEDDING_MODEL=nomic-embed-text
-
-# Gemini Configuration (for cloud-based AI)
-# Get your API key from: https://makersuite.google.com/app/apikey
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-pro
-GEMINI_EMBEDDING_MODEL=models/embedding-001
-
-# Database Configuration
-DATABASE_URL=sqlite:///./lumina.db
-CHROMA_PERSIST_DIR=./chroma_db
-
-# Server Configuration
-CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
-MAX_FILE_SIZE=52428800
-MAX_FILES_PER_BATCH=10000
-
-# AI Configuration
-MAX_TOKENS=4000
-TEMPERATURE=0.7
-EMBEDDING_BATCH_SIZE=100
-```
-
-**To switch AI providers:**
-- For **Ollama** (local): Set `AI_PROVIDER=ollama`
-- For **Gemini** (cloud): Set `AI_PROVIDER=gemini` and add your API key
-
-#### **Client Environment** (`client/.env`)
-
-```bash
-# Navigate to client directory (from project root)
-cd client
-
-# Create .env file from example
-cp .env.example .env
-```
-
-Edit `client/.env`:
-```env
-VITE_API_URL=http://localhost:8000
+**Windows:**
+```cmd
+git clone https://github.com/Abhishekkswamii/AI-Directory-Management-System.git && cd AI-Directory-Managment-System && setup.bat
 ```
 
 ---
 
 ## 📥 Installation
 
-### Automatic Installation (Recommended)
+### Automatic Setup (Recommended)
 
-**For macOS/Linux:**
+**macOS/Linux:**
 ```bash
 chmod +x setup.sh
 ./setup.sh
 ```
 
-**For Windows:**
+**Windows:**
 ```cmd
 setup.bat
 ```
 
+The setup script will:
+- ✅ Create Python virtual environment
+- ✅ Install all dependencies (Frontend + Backend + Electron)
+- ✅ Set up environment files
+- ✅ Verify installation
+
 ### Manual Installation
 
-#### 1. Install Frontend Dependencies
+<details>
+<summary>Click to expand manual installation steps</summary>
+
+#### 1. Install Root Dependencies (for Electron)
+
+```bash
+npm install
+```
+
+#### 2. Install Frontend Dependencies
 
 ```bash
 cd client
@@ -160,7 +167,7 @@ npm install
 cd ..
 ```
 
-#### 2. Install Backend Dependencies
+#### 3. Install Backend Dependencies
 
 **macOS/Linux:**
 ```bash
@@ -171,30 +178,86 @@ pip install -r requirements.txt
 cd ..
 ```
 
-**Windows:**
-```cmd
+**Windows (PowerShell):**
+```powershell
 cd server
 python -m venv venv
-venv\Scripts\activate
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 cd ..
 ```
 
+</details>
+
 ---
 
-## 🤖 AI Configuration
+## ⚙️ Configuration
 
-LUMINA is configured with both AI providers in the same `.env` file. Simply change the `AI_PROVIDER` variable to switch between them.
+### Environment Files
 
-### Option 1: Using Ollama (Local AI)
+#### Server Configuration (`server/.env`)
 
-Set `AI_PROVIDER=ollama` in `server/.env`
+Create `server/.env` with the following content:
 
-#### Installation
+```env
+# Environment
+ENVIRONMENT=development
+
+# AI Provider: "ollama" (local) or "gemini" (cloud)
+AI_PROVIDER=ollama
+
+# Ollama Configuration (Local AI)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.2
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
+
+# Gemini Configuration (Cloud AI)
+# Get your API key from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-pro
+GEMINI_EMBEDDING_MODEL=models/embedding-001
+
+# Database
+DATABASE_URL=sqlite:///./lumina.db
+CHROMA_PERSIST_DIR=./chroma_db
+
+# Server
+CORS_ORIGINS=["http://localhost:3000","http://localhost:5173","http://127.0.0.1:3000","http://127.0.0.1:5173"]
+MAX_FILE_SIZE=52428800
+MAX_FILES_PER_BATCH=10000
+
+# AI Settings
+MAX_TOKENS=4000
+TEMPERATURE=0.7
+EMBEDDING_BATCH_SIZE=100
+```
+
+#### Client Configuration (`client/.env`)
+
+Create `client/.env`:
+
+```env
+VITE_API_URL=http://localhost:8000
+```
+
+### Switching AI Providers
+
+Simply change the `AI_PROVIDER` variable in `server/.env`:
+- For **Ollama** (local): `AI_PROVIDER=ollama`
+- For **Gemini** (cloud): `AI_PROVIDER=gemini`
+
+Then restart the backend server.
+
+---
+
+## 🤖 AI Setup
+
+### Option 1: Ollama (Local AI - Recommended for Privacy)
+
+#### Install Ollama
 
 **macOS:**
 ```bash
-# Download and install from ollama.ai
 brew install ollama
 ```
 
@@ -204,25 +267,16 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ```
 
 **Windows:**
-Download installer from [ollama.ai](https://ollama.ai)
+Download from [ollama.ai](https://ollama.ai)
 
-#### Pull Required Models
+#### Download Required Models
 
 ```bash
-# Pull the language model
+# Language model for organization
 ollama pull llama3.2
 
-# Pull the embedding model
+# Embedding model for semantic search
 ollama pull nomic-embed-text
-```
-
-#### Verify Installation
-
-```bash
-# Check if Ollama is running
-curl http://localhost:11434/api/tags
-
-# You should see a list of installed models
 ```
 
 #### Start Ollama Service
@@ -233,64 +287,121 @@ ollama serve
 ```
 
 **Windows:**
-Ollama runs as a service automatically after installation.
+Runs automatically as a service after installation.
 
-### Option 2: Using Gemini (Cloud AI)
+#### Verify Installation
 
-Set `AI_PROVIDER=gemini` in `server/.env`
+```bash
+curl http://localhost:11434/api/tags
+```
 
-#### Get Your API Key
+You should see both models listed.
 
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Click "Create API Key"
-3. Copy the generated key
-4. Update `GEMINI_API_KEY` in your existing `server/.env` file:
+### Option 2: Gemini (Cloud AI - Fastest Setup)
+
+1. Get API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Update `server/.env`:
    ```env
    AI_PROVIDER=gemini
    GEMINI_API_KEY=your_actual_api_key_here
    ```
-5. Restart the backend server
+3. Restart the backend server
 
-⚠️ **IMPORTANT**: Never commit your `.env` file with your actual API key to GitHub!
+⚠️ **Security Note**: Never commit `.env` files to version control!
 
 ---
 
 ## ▶️ Running the Application
 
-### Development Mode
-
-#### Option 1: Run Both Servers Together
+### Quick Start (All Components)
 
 **From project root:**
 ```bash
 npm run dev
 ```
 
-This will start:
-- Backend API at `http://localhost:8000`
-- Frontend app at `http://localhost:5173`
+This starts:
+- ✅ Backend API → `http://localhost:8000`
+- ✅ Frontend Web → `http://localhost:5173`
+- ✅ Electron Desktop App
 
-#### Option 2: Run Servers Separately
+### Run Individual Components
 
-**Terminal 1 - Backend:**
+<details>
+<summary>Click to expand individual run commands</summary>
+
+#### Terminal 1: Backend Server
+
+**macOS/Linux:**
 ```bash
 cd server
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-**Terminal 2 - Frontend:**
+**Windows (PowerShell):**
+```powershell
+cd server
+.\venv\Scripts\python.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Expected Output:**
+```
+✅ Ollama embedding client initialized: nomic-embed-text
+✅ Ollama LLM client initialized: llama3.2
+INFO: Uvicorn running on http://0.0.0.0:8000
+INFO: Application startup complete.
+```
+
+#### Terminal 2: Frontend Development Server
+
 ```bash
 cd client
 npm run dev
 ```
 
-### Access the Application
+**Expected Output:**
+```
+VITE v5.4.21 ready in 2276 ms
 
-Open your browser and navigate to:
+➜  Local:   http://localhost:5173/
+➜  Network: use --host to expose
 ```
-http://localhost:5173
+
+**Vite Shortcuts:**
+- `o + enter` - Open in browser
+- `r + enter` - Restart server
+- `c + enter` - Clear console
+- `q + enter` - Quit
+
+#### Terminal 3: Electron Desktop App
+
+**macOS/Linux:**
+```bash
+NODE_ENV=development npx electron .
 ```
+
+**Windows (PowerShell):**
+```powershell
+$env:NODE_ENV="development"
+npx electron .
+```
+
+</details>
+
+### Access Points
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| 🌐 **Web App** | http://localhost:5173 | Browser interface |
+| 🖥️ **Desktop App** | Auto-opens | Electron frameless window |
+| 📚 **API Docs** | http://localhost:8000/docs | Swagger documentation |
+| 📖 **ReDoc** | http://localhost:8000/redoc | Alternative API docs |
+| ❤️ **Health Check** | http://localhost:8000/ | Server status |
+
+### Stopping the Application
+
+To stop all servers, press `Ctrl+C` in each terminal window.
 
 ---
 
@@ -298,104 +409,218 @@ http://localhost:5173
 
 ### Deploy Frontend (Vercel)
 
-```bash
-cd client
-npm install -g vercel
-vercel
-```
-
-Set environment variable in Vercel dashboard:
-- `VITE_API_URL` = `https://your-backend-url.com`
+1. Push your code to GitHub
+2. Import project in [Vercel](https://vercel.com)
+3. Configure build settings:
+   ```
+   Root Directory: client
+   Build Command: npm run build
+   Output Directory: dist
+   ```
+4. Add environment variables:
+   ```
+   VITE_API_URL=https://your-backend-url.com
+   ```
 
 ### Deploy Backend (Railway)
 
+1. Install Railway CLI:
+   ```bash
+   npm install -g @railway/cli
+   ```
+
+2. Login and deploy:
+   ```bash
+   railway login
+   railway init
+   railway up
+   ```
+
+3. Configure environment variables in Railway dashboard
+4. Note your deployed backend URL for frontend configuration
+
+### Deploy with Docker
+
+<details>
+<summary>Click to expand Docker deployment</summary>
+
+#### Using Docker Compose
+
+```bash
+# Build and start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+#### Individual Containers
+
+**Backend:**
 ```bash
 cd server
-npm install -g @railway/cli
-railway login
-railway init
-railway up
+docker build -t lumina-backend .
+docker run -p 8000:8000 lumina-backend
 ```
 
-Set environment variables in Railway dashboard:
-- Copy all variables from `server/.env.example`
-- Add your `GEMINI_API_KEY` if using Gemini
-- Update `CORS_ORIGINS` to include your frontend URL
-
-### Docker Deployment
-
+**Frontend:**
 ```bash
-# Build and run with Docker Compose
-docker-compose up --build
+cd client
+docker build -t lumina-frontend .
+docker run -p 5173:5173 lumina-frontend
 ```
 
-Access:
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:8000`
+</details>
 
 ---
 
-## 🔍 Troubleshooting
+## 🛠️ Development
 
-### Common Issues
+### Project Structure
 
-#### 1. "ModuleNotFoundError" in Python
+```
+AI-Directory-Managment-System/
+├── client/                 # React frontend
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   ├── pages/         # Page components
+│   │   ├── store/         # Zustand state management
+│   │   └── utils/         # Utilities
+│   └── package.json
+├── server/                 # FastAPI backend
+│   ├── core/              # Core AI modules
+│   │   ├── scanner.py     # File scanning
+│   │   ├── extractor.py   # Text extraction
+│   │   ├── embeddings.py  # Vector embeddings
+│   │   ├── thinker.py     # AI organization logic
+│   │   └── organizer.py   # Database operations
+│   ├── database/          # Database models
+│   ├── main.py            # API endpoints
+│   └── requirements.txt
+├── electron/              # Electron wrapper
+│   ├── main.js           # Main process
+│   └── preload.js        # Preload script
+└── package.json          # Root package.json
+```
+
+### Adding New Features
+
+1. **Frontend**: Add components in `client/src/components/`
+2. **Backend**: Add endpoints in `server/main.py`
+3. **AI Logic**: Modify `server/core/thinker.py`
+
+### Running Tests
+
+```bash
+# Frontend tests
+cd client
+npm test
+
+# Backend tests
+cd server
+source venv/bin/activate
+pytest
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### White Screen in Electron
+
+**Symptoms:** Electron window opens but shows white screen.
+
+**Solutions:**
+1. Verify backend is running: http://localhost:8000/docs
+2. Verify frontend is running: http://localhost:5173
+3. Press `F12` in Electron to open DevTools
+4. Press `Ctrl+R` to refresh the Electron window
+5. Wait 5-10 seconds after starting backend before launching Electron
+
+---
+
+### Backend Not Starting
+
+**Symptoms:** "No module named uvicorn" or module import errors.
 
 **Solution:**
 ```bash
 cd server
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-#### 2. "Cannot connect to API"
-
-**Solution:**
-- Ensure backend is running on port 8000
-- Check `VITE_API_URL` in `client/.env`
-- Verify CORS settings in `server/config.py`
-
-#### 3. Ollama not responding
-
-**Solution:**
+Ensure you always use the virtual environment Python:
 ```bash
-# Check if Ollama is running
-curl http://localhost:11434/api/tags
+# macOS/Linux
+./venv/bin/python -m uvicorn main:app --reload
 
-# If not, start Ollama
+# Windows
+.\venv\Scripts\python.exe -m uvicorn main:app --reload
+```
+
+---
+
+### Ollama Not Responding
+
+**Symptoms:** Ollama connection errors or timeouts.
+
+**Check if Ollama is running:**
+```bash
+curl http://localhost:11434/api/tags
+```
+
+**Start Ollama:**
+```bash
 ollama serve
 ```
 
-#### 4. "GEMINI_API_KEY not found"
+**Pull models if missing:**
+```bash
+ollama pull llama3.2
+ollama pull nomic-embed-text
+```
 
-**Solution:**
-- Verify `server/.env` has `GEMINI_API_KEY=your_key`
-- Ensure `AI_PROVIDER=gemini` in `server/.env`
-- Restart the backend server
+**Alternative:** Switch to Gemini in `server/.env`:
+```env
+AI_PROVIDER=gemini
+GEMINI_API_KEY=your_api_key_here
+```
 
-#### 5. Port already in use
+---
+
+### Port Already in Use
+
+**Symptoms:** "Address already in use" error.
 
 **macOS/Linux:**
 ```bash
-# Find and kill process on port 8000
+# Kill process on port 8000
 lsof -ti:8000 | xargs kill -9
 
-# Find and kill process on port 5173
+# Kill process on port 5173
 lsof -ti:5173 | xargs kill -9
 ```
 
-**Windows:**
-```cmd
-# Find and kill process on port 8000
-netstat -ano | findstr :8000
-taskkill /PID <PID> /F
+**Windows (PowerShell):**
+```powershell
+# Kill port 8000
+$processes = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_ -Force } }
 
-# Find and kill process on port 5173
-netstat -ano | findstr :5173
-taskkill /PID <PID> /F
+# Kill port 5173
+$processes = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+if ($processes) { $processes | ForEach-Object { Stop-Process -Id $_ -Force } }
 ```
 
-#### 6. Build errors in client
+---
+
+### Frontend Build Errors
+
+**Symptoms:** npm install or build failures.
 
 **Solution:**
 ```bash
@@ -405,157 +630,109 @@ npm install
 npm run build
 ```
 
-#### 7. Database errors
+---
+
+### CORS Errors
+
+**Symptoms:** API requests blocked by CORS policy.
+
+**Solution:** Update `CORS_ORIGINS` in `server/.env`:
+```env
+CORS_ORIGINS=["http://localhost:3000","http://localhost:5173","http://127.0.0.1:3000","http://127.0.0.1:5173"]
+```
+
+Restart the backend server after changes.
+
+---
+
+### Database Errors
+
+**Symptoms:** SQLite or ChromaDB errors.
 
 **Solution:**
 ```bash
 cd server
 rm lumina.db
 rm -rf chroma_db/
-# Restart the server - databases will be recreated
+# Restart backend - databases will be recreated
 ```
 
 ---
 
-## 📁 Project Structure
+## 📚 API Documentation
 
-```
-AI-Directory-Managment-System/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # UI components
-│   │   ├── pages/          # Application pages
-│   │   ├── store/          # State management
-│   │   └── utils/          # Helper functions
-│   ├── .env                # Frontend environment (create this)
-│   └── .env.example        # Frontend template
-│
-├── server/                 # FastAPI backend
-│   ├── core/              # AI engine
-│   ├── database/          # Database models
-│   ├── .env               # Backend environment (create this)
-│   └── .env.example       # Backend template
-│
-├── docker-compose.yml     # Docker configuration
-├── setup.sh              # Unix setup script
-├── setup.bat             # Windows setup script
-└── README.md             # This file
-```
+### Interactive Documentation
 
----
-
-## 🔐 Security Notes
-
-### Files to NEVER Commit to GitHub
-
-The following are already in `.gitignore`:
-
-- `client/.env` - Contains API URLs
-- `server/.env` - Contains API keys and secrets
-- `server/lumina.db` - Your database
-- `server/chroma_db/` - Vector database
-- `node_modules/` - Dependencies
-- `venv/` - Python virtual environment
-
-### Before Pushing to GitHub
-
-1. ✅ Verify `.env` files are not tracked:
-   ```bash
-   git status
-   # Should NOT show .env files
-   ```
-
-2. ✅ Only `.env.example` files should be committed (with placeholder values)
-
-3. ✅ If you accidentally committed secrets:
-   - Remove from git history
-   - Rotate all API keys immediately
-   - Update `.gitignore`
-
----
-
-## 🎯 Usage Guide
-
-### 1. Upload Files
-
-- Click "Begin" on landing page
-- Drag and drop a folder or click to browse
-- Files are processed client-side for privacy
-
-### 2. AI Analysis
-
-- LUMINA extracts text from your files
-- AI analyzes content and creates categories
-- 3-level hierarchy is generated (no "Misc" folders)
-
-### 3. Preview Organization
-
-- View files organized in orbital rings
-- Expand categories to see structure
-- Review before finalizing
-
-### 4. Export
-
-- Download as ZIP file
-- Or write back to file system
-- Access anytime from Collections
-
-### 5. Search
-
-- Use natural language queries
-- Semantic search across all files
-- Find files by content, not just name
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-- React 19 + TypeScript
-- Vite
-- Tailwind CSS
-- Framer Motion
-- Zustand (state management)
-
-### Backend
-- FastAPI (Python)
-- SQLModel + SQLite
-- ChromaDB (vector database)
-- Ollama / Gemini (AI)
-
----
-
-## 📖 API Documentation
-
-Once the backend is running, access interactive API docs at:
-
+Once the backend is running, visit:
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
+
+### Key Endpoints
+
+#### File Analysis
+```http
+POST /api/analyze
+Content-Type: application/json
+
+{
+  "files": [
+    {
+      "name": "document.pdf",
+      "content": "base64_encoded_content",
+      "metadata": {}
+    }
+  ]
+}
+```
+
+#### Semantic Search
+```http
+POST /api/search
+Content-Type: application/json
+
+{
+  "query": "financial reports from 2023",
+  "collection_id": "uuid"
+}
+```
+
+#### Collections
+```http
+GET /api/collections
+GET /api/collections/{collection_id}
+DELETE /api/collections/{collection_id}
+```
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions! Here's how to get started:
-
-### Quick Contribution Steps
+We welcome contributions! Please follow these steps:
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m 'Add amazing feature'
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
 5. Open a Pull Request
 
-### Development Guidelines
+### Code Style
 
-- Follow TypeScript/Python best practices
-- Add tests for new features
-- Update documentation as needed
-- Follow commit message conventions
+- **Frontend**: Follow React best practices, use TypeScript
+- **Backend**: Follow PEP 8 Python style guide
+- **Commits**: Use conventional commits format
 
 ---
 
-## 📝 License
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
@@ -563,27 +740,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Ollama](https://ollama.ai) - Local AI models
-- [Google Gemini](https://ai.google.dev/) - Cloud AI
+- [Ollama](https://ollama.ai) - Local AI inference
+- [Google Gemini](https://ai.google.dev/) - Cloud AI services
+- [FastAPI](https://fastapi.tiangolo.com/) - Backend framework
+- [React](https://react.dev/) - Frontend framework
 - [ChromaDB](https://www.trychroma.com/) - Vector database
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern Python framework
-- [React](https://react.dev/) - UI framework
+- [Electron](https://www.electronjs.org/) - Desktop app framework
 
 ---
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/abhishekkswamii/AI-Directory-Managment-System/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/abhishekkswamiiAI-Directory-Managment-System/discussions)
+- 📧 **Email**: support@lumina.ai
+- 🐛 **Issues**: [GitHub Issues](https://github.com/Abhishekkswamii/AI-Directory-Management-System/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/Abhishekkswamii/AI-Directory-Management-System/discussions)
 
 ---
 
-## 🌟 Star History
+<div align="center">
 
-If you find LUMINA useful, please consider giving it a ⭐ on GitHub!
+**Made with ❤️ by the LUMINA Team**
 
----
+[⬆ Back to Top](#-lumina---ai-powered-file-organization-system)
 
-**Built with 💜 by the LUMINA team**
-
-Transform your digital chaos into cosmic order. ✨
+</div>
