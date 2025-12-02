@@ -6,16 +6,18 @@ class Settings(BaseSettings):
     # Environment
     ENVIRONMENT: str = "development"
 
-    # OpenAI
-    OPENAI_API_KEY: str = ""
-    OPENAI_MODEL: str = "gpt-4o"
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-large"
+    # AI Provider Selection
+    AI_PROVIDER: str = "ollama"  # Options: "ollama" or "gemini"
 
-    # Ollama (alternative)
-    USE_OLLAMA: bool = False
+    # Ollama (Local)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
     OLLAMA_MODEL: str = "llama3.2"
     OLLAMA_EMBEDDING_MODEL: str = "nomic-embed-text"
+
+    # Gemini API (Cloud)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-pro"
+    GEMINI_EMBEDDING_MODEL: str = "models/embedding-001"
 
     # Database
     DATABASE_URL: str = "sqlite:///./lumina.db"
@@ -35,11 +37,13 @@ class Settings(BaseSettings):
     # AI
     MAX_TOKENS: int = 4000
     TEMPERATURE: float = 0.7
-    EMBEDDING_BATCH_SIZE: int = 100
+    EMBEDDING_BATCH_SIZE: int = 50  # Increased for faster processing
 
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": True,
+        "extra": "ignore"
+    }
 
 
 settings = Settings()

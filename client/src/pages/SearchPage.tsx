@@ -17,9 +17,11 @@ export function SearchPage() {
     setIsSearching(true)
     try {
       const searchResults = await searchCollections(query)
+      console.log('Search results:', searchResults)
       setResults(searchResults)
     } catch (error) {
       console.error('Search error:', error)
+      alert('Search failed. Please make sure you have organized some files first.')
     } finally {
       setIsSearching(false)
     }
@@ -29,7 +31,7 @@ export function SearchPage() {
     <div className="relative w-full min-h-screen">
       <OrbitalMenu />
 
-      <div className="container mx-auto px-8 py-16 max-w-5xl">
+      <div className="container mx-auto pl-32 pr-8 py-16">
         {/* Header */}
         <motion.div
           className="text-center mb-12"
@@ -91,7 +93,7 @@ export function SearchPage() {
 
             {results.map((file, index) => (
               <motion.div
-                key={file.id}
+                key={file.id || index}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -102,7 +104,8 @@ export function SearchPage() {
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{file.name}</h3>
                       <p className="text-sm text-white/60">
-                        {file.type} • {(file.size / 1024).toFixed(1)} KB
+                        {file.type}
+                        {file.size && ` • ${(file.size / 1024).toFixed(1)} KB`}
                       </p>
                     </div>
                   </div>

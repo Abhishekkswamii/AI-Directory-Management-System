@@ -11,26 +11,37 @@ class AIThinker:
     """Uses LLM to create intelligent file organization"""
 
     def __init__(self):
-        self.use_ollama = settings.USE_OLLAMA
+        self.provider = settings.AI_PROVIDER.lower()
+        self.client = None
+        self.model = None
 
-        if not self.use_ollama:
-            # OpenAI
-            try:
-                from openai import AsyncOpenAI
-                self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
-                self.model = settings.OPENAI_MODEL
-            except Exception as e:
-                print(f"Warning: OpenAI not available: {e}")
-                self.client = None
-        else:
-            # Ollama
+        if self.provider == "ollama":
+            # Ollama setup
             try:
                 import httpx
                 self.client = httpx.AsyncClient(base_url=settings.OLLAMA_BASE_URL)
                 self.model = settings.OLLAMA_MODEL
+                print(f"✅ Ollama LLM client initialized: {self.model}")
             except Exception as e:
                 print(f"Warning: Ollama not available: {e}")
-                self.client = None
+        
+        elif self.provider == "gemini":
+            # Gemini setup
+            try:
+                import google.generativeai as genai
+                if not settings.GEMINI_API_KEY:
+                    print("⚠️ Warning: GEMINI_API_KEY not set")
+                else:
+                    genai.configure(api_key=settings.GEMINI_API_KEY)
+                    self.model = genai.GenerativeModel(settings.GEMINI_MODEL)
+                    self.client = genai
+                    print(f"✅ Gemini LLM client initialized: {settings.GEMINI_MODEL}")
+            except Exception as e:
+                print(f"Warning: Gemini not available: {e}")
+        
+        else:
+            print(f"⚠️ Unknown AI provider: {self.provider}. Using Ollama as default.")
+            self.provider = "ollama"
 
     async def organize_files(self, files: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
@@ -42,9 +53,9 @@ class AIThinker:
         # Analyze file collection
         stats = FileScanner.analyze_files(files)
 
-        # Create file summary for AI
+        # Create file summary for AI (reduced for speed)
         file_summaries = []
-        for file in files[:500]:  # Limit to first 500 files for AI analysis
+        for file in files[:100]:  # Reduced from 500 to 100 for faster AI processing
             summary = {
                 "name": file["name"],
                 "type": file["type"],
@@ -52,20 +63,25 @@ class AIThinker:
                 "has_text": bool(file.get("extractedText")),
             }
             if file.get("extractedText"):
-                summary["preview"] = file["extractedText"][:200]
+                summary["preview"] = file["extractedText"][:100]  # Reduced from 200
             file_summaries.append(summary)
 
         # Build prompt for LLM
         prompt = self._build_organization_prompt(file_summaries, stats)
 
         # Get AI response
+        # Get AI response
+        structure = {}
         if self.client:
             print("🤖 Sending request to AI model...")
             structure = await self._get_ai_organization(prompt)
-            print(f"🤖 AI Response Structure: {json.dumps(structure, indent=2)}")
-        else:
-            print("⚠️ No AI client available, using fallback...")
-            # Fallback: rule-based organization
+            if structure:
+                print(f"🤖 AI Response Structure: {json.dumps(structure, indent=2)}")
+            else:
+                print("⚠️ AI returned empty structure, using fallback...")
+        
+        if not structure:
+            print("⚠️ Using fallback rule-based organization...")
             structure = self._fallback_organization(files)
 
         # Map files to structure
@@ -85,8 +101,8 @@ Analyze these {stats['total_files']} files and create a beautiful, intuitive 3-l
 File Statistics:
 {json.dumps(stats, indent=2)}
 
-Sample Files (first 50):
-{json.dumps(file_summaries[:50], indent=2)}
+Sample Files (first 30):
+{json.dumps(file_summaries[:30], indent=2)}
 
 Your task:
 1. Create 3-7 main categories (e.g., "Work", "Personal", "Creative", "Finance", "Education")
@@ -120,23 +136,8 @@ Be creative and thoughtful. Make it beautiful."""
     async def _get_ai_organization(self, prompt: str) -> Dict[str, Any]:
         """Get organization structure from AI"""
         try:
-            if not self.use_ollama:
-                # OpenAI
-                response = await self.client.chat.completions.create(
-                    model=self.model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "You are LUMINA, an expert at organizing files. Always return valid JSON.",
-                        },
-                        {"role": "user", "content": prompt},
-                    ],
-                    temperature=settings.TEMPERATURE,
-                    max_tokens=settings.MAX_TOKENS,
-                )
-                content = response.choices[0].message.content
-            else:
-                # Ollama
+            if self.provider == "ollama":
+                # Ollama - optimized for speed
                 response = await self.client.post(
                     "/api/generate",
                     json={
@@ -144,21 +145,48 @@ Be creative and thoughtful. Make it beautiful."""
                         "prompt": prompt,
                         "stream": False,
                         "format": "json",
+                        "options": {
+                            "num_predict": 1000,
+                            "temperature": 0.7,
+                            "top_k": 40,
+                            "top_p": 0.9,
+                        }
                     },
                     timeout=60.0,
                 )
                 data = response.json()
                 content = data.get("response", "{}")
+            
+            elif self.provider == "gemini":
+                # Gemini API
+                response = self.model.generate_content(
+                    prompt,
+                    generation_config={
+                        "temperature": 0.7,
+                        "max_output_tokens": 1000,
+                    }
+                )
+                content = response.text
+            
+            else:
+                return {}
 
-            # Parse JSON
-            # Clean content if it contains markdown code blocks
-            if "```json" in content:
-                content = content.split("```json")[1].split("```")[0]
-            elif "```" in content:
-                content = content.split("```")[1].split("```")[0]
+            # Robust JSON extraction
+            try:
+                # Find the first { and last }
+                start_idx = content.find("{")
+                end_idx = content.rfind("}")
                 
-            result = json.loads(content)
-            return result.get("structure", {})
+                if start_idx != -1 and end_idx != -1:
+                    content = content[start_idx : end_idx + 1]
+                    result = json.loads(content)
+                    return result.get("structure", {})
+                else:
+                    print("❌ No JSON object found in response")
+                    return {}
+            except json.JSONDecodeError as e:
+                print(f"❌ JSON Decode Error: {e}")
+                return {}
 
         except Exception as e:
             print(f"Error getting AI organization: {e}")
@@ -253,12 +281,17 @@ Be creative and thoughtful. Make it beautiful."""
                                 break
 
             # 3. Fallback: Put in first available folder of appropriate category if possible
-            if not placed:
+            if not placed and organized:
                 # Try to find a "Misc" or "General" folder, or just the first one
-                first_cat = list(organized.keys())[0]
-                first_sub = list(organized[first_cat].keys())[0]
-                first_folder = list(organized[first_cat][first_sub].keys())[0]
-                organized[first_cat][first_sub][first_folder].append(file)
+                try:
+                    first_cat = list(organized.keys())[0]
+                    if organized[first_cat]:
+                        first_sub = list(organized[first_cat].keys())[0]
+                        if organized[first_cat][first_sub]:
+                            first_folder = list(organized[first_cat][first_sub].keys())[0]
+                            organized[first_cat][first_sub][first_folder].append(file)
+                except (IndexError, KeyError) as e:
+                    print(f"Error placing file in fallback: {e}")
 
         # Remove empty folders
         cleaned = {}

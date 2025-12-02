@@ -1,13 +1,13 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, FolderOpen, Sparkles, AlertCircle, RefreshCw } from 'lucide-react'
+import { Upload, FolderOpen, Sparkles, AlertCircle, RefreshCw, ArrowLeft, X, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { OrbitalMenu } from '../components/OrbitalMenu'
 import { GlassCard } from '../components/GlassCard'
 import { OrbButton } from '../components/OrbButton'
 import { useStore } from '../store/useStore'
 import { pickDirectory, processFiles, isFileSystemAccessSupported } from '../utils/fileProcessor'
-import { analyzeFiles } from '../utils/api'
+import { analyzeFiles, healthCheck } from '../utils/api'
 
 export function WorkspacePage() {
   const navigate = useNavigate()
@@ -15,7 +15,10 @@ export function WorkspacePage() {
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fileCount, setFileCount] = useState(0)
-  
+  const [backendStatus, setBackendStatus] = useState<'checking' | 'connected' | 'error'>('checking')
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [directoryPath, setDirectoryPath] = useState<string>('')
+
   const {
     files,
     setFiles,
@@ -42,6 +45,66 @@ export function WorkspacePage() {
     'Organizing your universe…',
     'Building perfect order…',
   ]
+
+  // Health check on component mount with retry logic
+  useEffect(() => {
+    const checkBackend = async () => {
+      const maxRetries = 5
+      const baseDelay = 1000 // 1 second
+
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          await healthCheck()
+          setBackendStatus('connected')
+          setError(null) // Clear any stale errors
+          console.log('Backend health check successful')
+          return
+        } catch (err) {
+          console.error(`Backend health check failed (attempt ${attempt + 1}/${maxRetries}):`, err)
+
+          if (attempt < maxRetries - 1) {
+            // Wait before retrying with exponential backoff
+            const delay = baseDelay * Math.pow(2, attempt)
+            console.log(`Retrying in ${delay}ms...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+          } else {
+            // Final attempt failed
+            setBackendStatus('error')
+            setError('Cannot connect to the backend server. The server may still be starting up. Please wait a moment and try again.')
+          }
+        }
+      }
+    }
+
+    checkBackend()
+  }, [])
+
+  const handleCancelProcessing = () => {
+    setIsProcessing(false)
+    setProcessingMessage('')
+    setProgress(0)
+    setFileCount(0)
+    setFiles([])
+  }
+
+  const handleFilesSelected = (files: File[], path?: string) => {
+    setSelectedFiles(files)
+    setFileCount(files.length)
+    if (path) {
+      setDirectoryPath(path)
+    } else if (files.length > 0) {
+      // Extract common path or first file's path
+      const firstPath = files[0].webkitRelativePath || files[0].name
+      const pathParts = firstPath.split('/')
+      setDirectoryPath(pathParts.length > 1 ? pathParts[0] : 'Selected files')
+    }
+    setError(null)
+  }
+
+  const handleOrganize = async () => {
+    if (selectedFiles.length === 0) return
+    await handleFileSelect(selectedFiles)
+  }
 
   const handleFileSelect = async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return
@@ -76,14 +139,14 @@ export function WorkspacePage() {
       console.log('Sending files to backend:', processed.length)
       console.log('First file sample:', processed[0])
       console.log('Full payload:', JSON.stringify({ files: processed.slice(0, 2) }, null, 2))
-      
+
       const result = await analyzeFiles(processed)
-      
+
       console.log('Received result from backend:', result)
-      
+
       setProgress(90)
       setProcessingMessage('Finalizing organization structure…')
-      
+
       setOrganizedStructure(result.organized_structure)
       setCollectionId(result.collection_id)
 
@@ -95,7 +158,7 @@ export function WorkspacePage() {
         setIsProcessing(false)
         navigate('/preview')
       }, 1000)
-      
+
     } catch (error: any) {
       console.error('Error processing files:', error)
       console.error('Error details:', {
@@ -104,15 +167,15 @@ export function WorkspacePage() {
         response: error.response?.data,
         status: error.response?.status
       })
-      
+
       // Clear interval if it exists
       setIsProcessing(false)
-      
+
       // Provide user-friendly error messages
       let errorMessage = 'Something went wrong. '
-      
+
       if (error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')) {
-        errorMessage += 'Cannot connect to the backend server. Make sure the server is running on http://127.0.0.1:8000'
+        errorMessage += 'Cannot connect to the backend server. Please ensure the backend is running and try again.'
       } else if (error.response?.status === 500) {
         errorMessage += 'Server error: ' + (error.response.data?.detail || 'Check the backend logs for details.')
       } else if (error.response?.status === 400) {
@@ -122,7 +185,7 @@ export function WorkspacePage() {
       } else {
         errorMessage += error.message || 'Please try again.'
       }
-      
+
       setError(errorMessage)
       setProcessingMessage('')
       setProgress(0)
@@ -132,8 +195,8 @@ export function WorkspacePage() {
   const handleDirectoryPicker = async () => {
     try {
       setError(null)
-      const selectedFiles = await pickDirectory()
-      await handleFileSelect(selectedFiles)
+      const files = await pickDirectory()
+      handleFilesSelected(files)
     } catch (error: any) {
       console.error('Directory picker error:', error)
       if (error.name !== 'AbortError') {
@@ -143,8 +206,8 @@ export function WorkspacePage() {
   }
 
   const handleInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || [])
-    await handleFileSelect(selectedFiles)
+    const files = Array.from(e.target.files || [])
+    handleFilesSelected(files)
   }
 
   const handleDrop = async (e: React.DragEvent) => {
@@ -164,7 +227,7 @@ export function WorkspacePage() {
     }
 
     if (files.length > 0) {
-      await handleFileSelect(files)
+      handleFilesSelected(files)
     }
   }
 
@@ -192,21 +255,21 @@ export function WorkspacePage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen">
+    <div className="relative w-full h-screen overflow-hidden">
       <OrbitalMenu />
 
-      <div className="flex items-center justify-center min-h-screen px-8 py-16">
+      <div className="flex items-center justify-center h-full pl-32 pr-8 py-8">
         <div className="max-w-4xl w-full">
           {/* Header */}
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cosmic-violet via-cosmic-cyan to-cosmic-pink bg-clip-text text-transparent">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-cosmic-violet via-cosmic-cyan to-cosmic-pink bg-clip-text text-transparent">
               Upload Your Files
             </h1>
-            <p className="text-xl text-white/70">
+            <p className="text-base text-white/70">
               Drop a folder, select files, or choose a directory to begin the magic
             </p>
           </motion.div>
@@ -226,14 +289,13 @@ export function WorkspacePage() {
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-red-400 mb-2">Error</h3>
                       <p className="text-white/80 mb-4">{error}</p>
-                      <OrbButton
-                        size="sm"
-                        variant="secondary"
+                      <button
                         onClick={handleRetry}
+                        className="text-sm px-4 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 transition-all duration-200"
                       >
-                        <RefreshCw className="w-4 h-4 mr-2" />
+                        <RefreshCw className="w-4 h-4 inline mr-2" />
                         Try Again
-                      </OrbButton>
+                      </button>
                     </div>
                   </div>
                 </GlassCard>
@@ -241,100 +303,201 @@ export function WorkspacePage() {
             )}
           </AnimatePresence>
 
-          {/* Upload Area */}
+          {/* Upload Area or Selected Files Display */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <GlassCard
-              glowColor="violet"
-              intensity="strong"
-              hover={false}
-              className="relative overflow-hidden"
-            >
-              <div
-                className={`p-16 text-center transition-all duration-300 ${
-                  isDragging ? 'bg-cosmic-violet/20 scale-105' : ''
-                }`}
-                onDrop={handleDrop}
-                onDragOver={(e) => {
-                  e.preventDefault()
-                  setIsDragging(true)
-                }}
-                onDragLeave={() => setIsDragging(false)}
-              >
-                {/* Animated background effect */}
+            <AnimatePresence mode="wait">
+              {selectedFiles.length === 0 ? (
                 <motion.div
-                  className="absolute inset-0 opacity-20"
-                  style={{
-                    background:
-                      'radial-gradient(circle at center, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
-                  }}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.2, 0.4, 0.2],
-                  }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-
-                <div className="relative z-10">
-                  <motion.div
-                    className="mb-8 inline-block"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
+                  key="upload-area"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <GlassCard
+                    glowColor="violet"
+                    intensity="strong"
+                    hover={false}
+                    className="relative overflow-hidden"
                   >
-                    <Upload className="w-24 h-24 text-cosmic-cyan drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] mx-auto mb-4" />
-                  </motion.div>
-
-                  <h2 className="text-3xl font-bold mb-4 text-white">Drop Your Folder Here</h2>
-                  <p className="text-white/60 mb-8 text-lg">
-                    Or use one of the options below
-                  </p>
-
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    {isFileSystemAccessSupported() && (
-                      <OrbButton
-                        size="lg"
-                        variant="primary"
-                        onClick={handleDirectoryPicker}
-                      >
-                        <FolderOpen className="w-5 h-5 mr-2" />
-                        Choose Directory
-                      </OrbButton>
-                    )}
-
-                    <OrbButton
-                      size="lg"
-                      variant="secondary"
-                      onClick={() => fileInputRef.current?.click()}
+                    <div
+                      className={`p-12 text-center transition-all duration-300 ${isDragging ? 'bg-cosmic-violet/20 scale-105' : ''
+                        }`}
+                      onDrop={handleDrop}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        setIsDragging(true)
+                      }}
+                      onDragLeave={() => setIsDragging(false)}
                     >
-                      <Upload className="w-5 h-5 mr-2" />
-                      Select Files
-                    </OrbButton>
-                  </div>
+                      {/* Animated background effect */}
+                      <motion.div
+                        className="absolute inset-0 opacity-20"
+                        style={{
+                          background:
+                            'radial-gradient(circle at center, rgba(99, 102, 241, 0.3) 0%, transparent 70%)',
+                        }}
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          opacity: [0.2, 0.4, 0.2],
+                        }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
 
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    // @ts-ignore
-                    webkitdirectory=""
-                    className="hidden"
-                    onChange={handleInputChange}
-                  />
+                      <div className="relative z-10">
+                        <motion.div
+                          className="mb-4 inline-block"
+                          animate={{ y: [0, -10, 0] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          <Upload className="w-16 h-16 text-cosmic-cyan drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] mx-auto mb-2" />
+                        </motion.div>
 
-                  <div className="mt-8 text-sm text-white/40">
-                    <p>Supports all file types • Privacy-first processing</p>
-                  </div>
-                </div>
-              </div>
-            </GlassCard>
+                        <h2 className="text-2xl font-bold mb-3 text-white">Drop Your Folder Here</h2>
+                        <p className="text-white/60 mb-6 text-base">
+                          Or use one of the options below
+                        </p>
+
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                          {isFileSystemAccessSupported() && (
+                            <OrbButton
+                              size="lg"
+                              variant="primary"
+                              onClick={handleDirectoryPicker}
+                            >
+                              <FolderOpen className="w-5 h-5 mr-2" />
+                              Choose Directory
+                            </OrbButton>
+                          )}
+
+                          <OrbButton
+                            size="lg"
+                            variant="secondary"
+                            onClick={() => fileInputRef.current?.click()}
+                          >
+                            <Upload className="w-5 h-5 mr-2" />
+                            Select Files
+                          </OrbButton>
+                        </div>
+
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          // @ts-ignore
+                          webkitdirectory=""
+                          className="hidden"
+                          onChange={handleInputChange}
+                          aria-label="File upload input"
+                        />
+
+                        <div className="mt-4 text-xs text-white/40">
+                          <p>Supports all file types • Privacy-first processing</p>
+                        </div>
+                      </div>
+                    </div>
+                  </GlassCard>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="selected-files"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <GlassCard
+                    glowColor="cyan"
+                    intensity="strong"
+                    hover={false}
+                    className="relative overflow-hidden"
+                  >
+                    <div className="p-12 text-center">
+                      {/* Animated background effect */}
+                      <motion.div
+                        className="absolute inset-0 opacity-20"
+                        style={{
+                          background:
+                            'radial-gradient(circle at center, rgba(34, 211, 238, 0.3) 0%, transparent 70%)',
+                        }}
+                        animate={{
+                          scale: [1, 1.2, 1],
+                          opacity: [0.2, 0.4, 0.2],
+                        }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                      />
+
+                      <div className="relative z-10">
+                        <div className="mb-4 inline-block">
+                          <FolderOpen className="w-16 h-16 text-cosmic-cyan drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] mx-auto mb-2" />
+                        </div>
+
+                        <h2 className="text-2xl font-bold mb-3 text-cosmic-cyan">
+                          Files Selected
+                        </h2>
+                        
+                        <p className="text-white/80 mb-2 text-lg">
+                          <span className="font-semibold">{directoryPath}</span>
+                        </p>
+                        <p className="text-white/60 mb-6 text-base">
+                          {fileCount} {fileCount === 1 ? 'file' : 'files'} ready to organize
+                        </p>
+
+                        {/* Show first few files */}
+                        <div className="mb-6 max-h-32 overflow-y-auto">
+                          {selectedFiles.slice(0, 5).map((file, idx) => (
+                            <div key={idx} className="text-sm text-white/60">
+                              • {file.name}
+                            </div>
+                          ))}
+                          {selectedFiles.length > 5 && (
+                            <div className="text-sm text-white/50 mt-2">
+                              ... and {selectedFiles.length - 5} more files
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                          <OrbButton
+                            size="lg"
+                            variant="primary"
+                            onClick={handleOrganize}
+                          >
+                            <Sparkles className="w-5 h-5 mr-2" />
+                            Organize Now
+                          </OrbButton>
+
+                          <OrbButton
+                            size="lg"
+                            variant="secondary"
+                            onClick={() => {
+                              setSelectedFiles([])
+                              setDirectoryPath('')
+                              setFileCount(0)
+                            }}
+                          >
+                            <X className="w-5 h-5 mr-2" />
+                            Cancel
+                          </OrbButton>
+                        </div>
+
+                        <div className="mt-4 text-xs text-white/40">
+                          <p>Supports all file types • Privacy-first processing</p>
+                        </div>
+                      </div>
+                    </div>
+                  </GlassCard>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
           {/* Features */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -356,10 +519,10 @@ export function WorkspacePage() {
                 desc: 'See your organized files in seconds',
               },
             ].map((feature, i) => (
-              <GlassCard key={i} glowColor="cyan" className="p-6 text-center">
-                <div className="text-4xl mb-3">{feature.icon}</div>
-                <h3 className="text-lg font-semibold mb-2 text-white">{feature.title}</h3>
-                <p className="text-sm text-white/60">{feature.desc}</p>
+              <GlassCard key={i} glowColor="cyan" className="p-4 text-center">
+                <div className="text-3xl mb-2">{feature.icon}</div>
+                <h3 className="text-base font-semibold mb-1 text-white">{feature.title}</h3>
+                <p className="text-xs text-white/60">{feature.desc}</p>
               </GlassCard>
             ))}
           </motion.div>
@@ -419,6 +582,24 @@ export function WorkspacePage() {
                   Processing {fileCount} files
                 </p>
               )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 justify-center mt-8">
+                <button
+                  onClick={() => navigate('/')}
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 hover:text-white transition-all duration-200 flex items-center gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+                <button
+                  onClick={handleCancelProcessing}
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white/80 hover:text-white transition-all duration-200 flex items-center gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  Cancel
+                </button>
+              </div>
             </div>
           </motion.div>
         )}

@@ -12,7 +12,7 @@ export interface ProcessedFile extends FileItem {
 }
 
 /**
- * Extract text from PDF files
+ * Extract text from PDF files - OPTIMIZED
  */
 export async function extractPdfText(file: File): Promise<string> {
   try {
@@ -20,12 +20,15 @@ export async function extractPdfText(file: File): Promise<string> {
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
     let fullText = ''
 
-    for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
-      // Limit to first 10 pages
+    // Reduced from 10 to 3 pages for faster processing
+    for (let i = 1; i <= Math.min(pdf.numPages, 3); i++) {
       const page = await pdf.getPage(i)
       const content = await page.getTextContent()
       const text = content.items.map((item: any) => item.str).join(' ')
       fullText += text + '\n'
+      
+      // Stop if we already have enough text (2000 chars is plenty for AI)
+      if (fullText.length > 2000) break
     }
 
     return fullText.trim()
@@ -50,26 +53,23 @@ export async function extractDocxText(file: File): Promise<string> {
 }
 
 /**
- * Extract text from images using OCR
+ * Extract text from images using OCR - DISABLED FOR SPEED
+ * OCR is extremely slow and not critical for file organization
  */
 export async function extractImageText(file: File): Promise<string> {
-  try {
-    const result = await Tesseract.recognize(file, 'eng', {
-      logger: (m) => console.log(m),
-    })
-    return result.data.text
-  } catch (error) {
-    console.error('OCR extraction error:', error)
-    return ''
-  }
+  // Disabled OCR for speed - images can be organized by name and metadata
+  console.log('OCR disabled for faster processing')
+  return ''
 }
 
 /**
- * Read text from plain text files
+ * Read text from plain text files - OPTIMIZED
  */
 export async function extractTextFile(file: File): Promise<string> {
   try {
-    return await file.text()
+    const text = await file.text()
+    // Return only first 2000 chars for speed
+    return text.slice(0, 2000)
   } catch (error) {
     console.error('Text file extraction error:', error)
     return ''
@@ -122,24 +122,23 @@ export async function processFile(file: File, path: string = ''): Promise<Proces
   try {
     let extractedText = ''
 
-    if (file.type === 'application/pdf') {
+    // Prioritize fast extraction methods only
+    if (file.type === 'application/pdf' && file.size < 5 * 1024 * 1024) {
+      // Only process PDFs under 5MB for speed
       extractedText = await extractPdfText(file)
     } else if (
-      file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-      ext === 'docx'
+      (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+      ext === 'docx') && file.size < 2 * 1024 * 1024
     ) {
+      // Only process DOCX under 2MB
       extractedText = await extractDocxText(file)
-    } else if (file.type.startsWith('image/')) {
-      // Only extract text from images if they're small (< 2MB) to avoid long processing
-      if (file.size < 2 * 1024 * 1024) {
-        extractedText = await extractImageText(file)
-      }
-    } else if (file.type.startsWith('text/') || file.size < 1024 * 1024) {
-      // Extract text from text files < 1MB
+    } else if (file.type.startsWith('text/') && file.size < 500 * 1024) {
+      // Reduced from 1MB to 500KB for faster processing
       extractedText = await extractTextFile(file)
     }
+    // Images: Skip OCR entirely for speed
 
-    fileItem.extractedText = extractedText.slice(0, 10000) // Limit to 10k chars per file
+    fileItem.extractedText = extractedText.slice(0, 2000) // Reduced from 10k to 2k for speed
   } catch (error) {
     console.error(`Error processing ${file.name}:`, error)
     fileItem.error = error instanceof Error ? error.message : 'Unknown error'
@@ -149,21 +148,27 @@ export async function processFile(file: File, path: string = ''): Promise<Proces
 }
 
 /**
- * Process multiple files with progress callback
+ * Process multiple files with progress callback - OPTIMIZED WITH BATCHING
  */
 export async function processFiles(
   files: File[],
   onProgress?: (processed: number, total: number) => void
 ): Promise<ProcessedFile[]> {
   const processed: ProcessedFile[] = []
+  const batchSize = 10 // Process 10 files concurrently
   
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    const result = await processFile(file)
-    processed.push(result)
+  for (let i = 0; i < files.length; i += batchSize) {
+    const batch = files.slice(i, i + batchSize)
+    
+    // Process batch concurrently
+    const batchResults = await Promise.all(
+      batch.map(file => processFile(file))
+    )
+    
+    processed.push(...batchResults)
     
     if (onProgress) {
-      onProgress(i + 1, files.length)
+      onProgress(processed.length, files.length)
     }
   }
   

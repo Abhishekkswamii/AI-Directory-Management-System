@@ -3,10 +3,66 @@ import { Cpu, Database, Sparkles } from 'lucide-react'
 import { OrbitalMenu } from '../components/OrbitalMenu'
 import { GlassCard } from '../components/GlassCard'
 import { useStore } from '../store/useStore'
+import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
 export function SettingsPage() {
   const { settings, toggleSetting } = useStore()
+  const [aiProvider, setAiProvider] = useState<'ollama' | 'gemini'>('ollama')
+  const [hasGeminiKey, setHasGeminiKey] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+
+  useEffect(() => {
+    // Load settings from backend
+    fetch('http://localhost:8001/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        console.log('[Settings] Loaded from backend:', data)
+        setAiProvider(data.ai_provider || 'ollama')
+        const hasKey = data.gemini_api_key && data.gemini_api_key !== '' && data.gemini_api_key !== 'null'
+        console.log('[Settings] Gemini API Key status:', { raw: data.gemini_api_key, hasKey })
+        setHasGeminiKey(hasKey)
+      })
+      .catch(err => console.error('Failed to load settings:', err))
+  }, [])
+
+  const saveAiSettings = async (newProvider: 'ollama' | 'gemini') => {
+    setIsSaving(true)
+    setSaveMessage('')
+    
+    try {
+      const response = await fetch('http://localhost:8001/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ai_provider: newProvider
+        })
+      })
+
+      if (response.ok) {
+        setAiProvider(newProvider)
+        setSaveMessage('✅ AI provider switched successfully!')
+        setTimeout(() => setSaveMessage(''), 3000)
+      } else {
+        setSaveMessage('❌ Failed to save settings')
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      setSaveMessage('❌ Error saving settings')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleProviderChange = (newProvider: 'ollama' | 'gemini') => {
+    if (newProvider === 'gemini' && !hasGeminiKey) {
+      setSaveMessage('⚠️ Please configure GEMINI_API_KEY in server/.env file first')
+      setTimeout(() => setSaveMessage(''), 4000)
+      return
+    }
+    saveAiSettings(newProvider)
+  }
 
   const Toggle = ({ active, onToggle }: { active: boolean; onToggle: () => void }) => (
     <button
@@ -53,21 +109,105 @@ export function SettingsPage() {
                 <Cpu className="w-6 h-6 text-cosmic-violet drop-shadow-[0_0_10px_rgba(99,102,241,0.8)]" />
                 <h2 className="text-2xl font-bold text-white">AI Engine</h2>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-white/90">Model Provider</label>
-                  <select className="w-full bg-white/5 border-2 border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cosmic-violet focus:shadow-[0_0_15px_rgba(99,102,241,0.5)]">
-                    <option>OpenAI GPT-4o</option>
-                    <option>Ollama (Local)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-white/90">API Key</label>
-                  <input
-                    type="password"
-                    placeholder="sk-..."
-                    className="w-full bg-white/5 border-2 border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-cosmic-violet focus:shadow-[0_0_15px_rgba(99,102,241,0.5)]"
-                  />
+                  <label className="block text-sm font-medium mb-3 text-white/90">Model Provider</label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => handleProviderChange('ollama')}
+                      disabled={isSaving}
+                      className={clsx(
+                        'p-4 rounded-xl border-2 transition-all duration-300',
+                        aiProvider === 'ollama'
+                          ? 'bg-cosmic-violet/20 border-cosmic-violet shadow-[0_0_20px_rgba(99,102,241,0.6)]'
+                          : 'bg-white/5 border-white/20 hover:border-white/40',
+                        isSaving && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={clsx(
+                          'w-3 h-3 rounded-full',
+                          aiProvider === 'ollama' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-gray-500'
+                        )} />
+                        <span className="font-bold text-white">Ollama</span>
+                      </div>
+                      <p className="text-xs text-white/60 text-left">
+                        Local AI - Free & Private
+                      </p>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => handleProviderChange('gemini')}
+                      disabled={isSaving}
+                      className={clsx(
+                        'p-4 rounded-xl border-2 transition-all duration-300',
+                        aiProvider === 'gemini'
+                          ? 'bg-cosmic-cyan/20 border-cosmic-cyan shadow-[0_0_20px_rgba(34,211,238,0.6)]'
+                          : 'bg-white/5 border-white/20 hover:border-white/40',
+                        isSaving && 'opacity-50 cursor-not-allowed'
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={clsx(
+                          'w-3 h-3 rounded-full',
+                          aiProvider === 'gemini' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' : 'bg-gray-500'
+                        )} />
+                        <span className="font-bold text-white">Gemini</span>
+                      </div>
+                      <p className="text-xs text-white/60 text-left">
+                        Google AI - Cloud Based
+                      </p>
+                    </button>
+                  </div>
+
+                  <div className="bg-white/5 border-2 border-white/20 rounded-xl p-4">
+                    {aiProvider === 'ollama' ? (
+                      <>
+                        <p className="text-sm text-white/70 mb-2">
+                          <strong>Status:</strong> Running locally on your machine
+                        </p>
+                        <p className="text-xs text-white/50">
+                          Maximum privacy, zero cost, no internet required
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-sm text-white/70 mb-2">
+                          <strong>Status:</strong> {hasGeminiKey ? 'API Key Configured ✓' : 'API Key Not Found'}
+                        </p>
+                        <p className="text-xs text-white/50">
+                          {hasGeminiKey 
+                            ? 'Using Google Gemini AI for file processing'
+                            : 'Configure GEMINI_API_KEY in server/.env file'}
+                        </p>
+                        {!hasGeminiKey && (
+                          <p className="mt-2 text-xs text-white/50">
+                            Get your API key from{' '}
+                            <a
+                              href="https://makersuite.google.com/app/apikey"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-cosmic-cyan hover:underline"
+                            >
+                              Google AI Studio
+                            </a>
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {saveMessage && (
+                    <p className={clsx(
+                      'text-sm text-center mt-3',
+                      saveMessage.startsWith('✅') ? 'text-green-400' : 
+                      saveMessage.startsWith('⚠️') ? 'text-yellow-400' : 'text-red-400'
+                    )}>
+                      {saveMessage}
+                    </p>
+                  )}
                 </div>
               </div>
             </GlassCard>

@@ -26,6 +26,13 @@ export default {
             900: '#111827',
           },
         },
+        cosmic: {
+          cyan: '#22d3ee',
+          violet: '#8b5cf6',
+          purple: '#a855f7',
+          pink: '#ec4899',
+          void: '#0a0118',
+        },
       },
       fontFamily: {
         sans: ['Satoshi', 'system-ui', 'sans-serif'],

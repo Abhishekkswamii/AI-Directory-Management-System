@@ -123,7 +123,9 @@ class FileOrganizer:
                             "collection_id": collection_id,
                             "file_id": file["id"],
                             "name": file["name"],
+                            "path": file.get("path", ""),
                             "type": file["type"],
+                            "size": file.get("size", 0),
                         }
                     )
 
@@ -162,9 +164,11 @@ class FileOrganizer:
                 for metadata in results["metadatas"][0]:
                     formatted_results.append(
                         {
-                            "id": metadata["file_id"],
-                            "name": metadata["name"],
-                            "type": metadata["type"],
+                            "id": metadata.get("file_id", ""),
+                            "name": metadata.get("name", "Unknown"),
+                            "path": metadata.get("path", ""),
+                            "type": metadata.get("type", "file"),
+                            "size": metadata.get("size", 0),
                         }
                     )
 

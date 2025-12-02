@@ -39,13 +39,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
+# CORS middleware - configured for Electron
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for Electron compatibility
+    allow_credentials=False,  # Must be False when allow_origins is "*"
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 
@@ -78,6 +79,15 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     results: List[FileItem]
+
+
+class SettingsRequest(BaseModel):
+    ai_provider: str
+
+
+class SettingsResponse(BaseModel):
+    ai_provider: str
+    gemini_api_key: str
 
 
 @app.get("/")
@@ -188,11 +198,84 @@ async def get_all_collections():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/settings", response_model=SettingsResponse)
+async def get_settings():
+    """
+    Get current AI provider settings
+    """
+    return SettingsResponse(
+        ai_provider=settings.AI_PROVIDER,
+        gemini_api_key="configured" if settings.GEMINI_API_KEY else ""
+    )
+
+
+@app.post("/api/settings")
+async def update_settings(request: SettingsRequest):
+    """
+    Update AI provider settings (switches between Ollama and Gemini)
+    """
+    try:
+        from pathlib import Path
+        
+        # Validate provider
+        if request.ai_provider not in ["ollama", "gemini"]:
+            raise HTTPException(status_code=400, detail="Invalid AI provider. Must be 'ollama' or 'gemini'")
+        
+        # If switching to Gemini, check if API key is configured
+        if request.ai_provider == "gemini" and not settings.GEMINI_API_KEY:
+            raise HTTPException(
+                status_code=400, 
+                detail="GEMINI_API_KEY not configured in .env file. Please add it before switching to Gemini."
+            )
+        
+        # Update settings in memory
+        settings.AI_PROVIDER = request.ai_provider
+        
+        # Save to .env file
+        env_path = Path(__file__).parent / ".env"
+        env_lines = []
+        
+        # Read existing .env if it exists
+        if env_path.exists():
+            with open(env_path, 'r') as f:
+                env_lines = f.readlines()
+        
+        # Update AI_PROVIDER
+        updated_provider = False
+        for i, line in enumerate(env_lines):
+            if line.startswith('AI_PROVIDER='):
+                env_lines[i] = f'AI_PROVIDER={request.ai_provider}\n'
+                updated_provider = True
+                break
+        
+        # Add if not found
+        if not updated_provider:
+            env_lines.append(f'AI_PROVIDER={request.ai_provider}\n')
+        
+        # Write back to .env
+        with open(env_path, 'w') as f:
+            f.writelines(env_lines)
+        
+        # Reinitialize AI services with new settings
+        app.state.embedding_engine = EmbeddingEngine()
+        app.state.ai_thinker = AIThinker()
+        
+        return {"status": "success", "message": f"Switched to {request.ai_provider.upper()} successfully"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error updating settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
+    import os
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=True,
         log_level="info",
     )

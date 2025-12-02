@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
 export interface FileItem {
   id: string
@@ -60,53 +61,61 @@ interface AppState {
   toggleSetting: (key: keyof AppState['settings']) => void
 }
 
-export const useStore = create<AppState>((set) => ({
-  // Files
-  files: [],
-  setFiles: (files) => set({ files }),
-  addFiles: (newFiles) => set((state) => ({ files: [...state.files, ...newFiles] })),
-
-  // Processing
-  isProcessing: false,
-  setIsProcessing: (isProcessing) => set({ isProcessing }),
-  processingMessage: '',
-  setProcessingMessage: (processingMessage) => set({ processingMessage }),
-  progress: 0,
-  setProgress: (progress) => set({ progress }),
-
-  // Organization
-  organizedStructure: null,
-  setOrganizedStructure: (organizedStructure) => set({ organizedStructure }),
-
-  // Collection
-  collectionId: null,
-  setCollectionId: (collectionId) => set({ collectionId }),
-
-  // Navigation
-  currentView: 'landing',
-  setCurrentView: (currentView) => set({ currentView }),
-
-  // Reset
-  reset: () =>
-    set({
+export const useStore = create<AppState>()(
+  persist(
+    (set) => ({
+      // Files
       files: [],
-      isProcessing: false,
-      processingMessage: '',
-      progress: 0,
-      organizedStructure: null,
-      collectionId: null,
-      currentView: 'landing',
-    }),
+      setFiles: (files) => set({ files }),
+      addFiles: (newFiles) => set((state) => ({ files: [...state.files, ...newFiles] })),
 
-  // Settings
-  settings: {
-    cursorTrail: true,
-    particles: true,
-    clientSideProcessing: true,
-    saveHistory: true,
-  },
-  toggleSetting: (key) =>
-    set((state) => ({
-      settings: { ...state.settings, [key]: !state.settings[key] },
-    })),
-}))
+      // Processing
+      isProcessing: false,
+      setIsProcessing: (isProcessing) => set({ isProcessing }),
+      processingMessage: '',
+      setProcessingMessage: (processingMessage) => set({ processingMessage }),
+      progress: 0,
+      setProgress: (progress) => set({ progress }),
+
+      // Organization
+      organizedStructure: null,
+      setOrganizedStructure: (organizedStructure) => set({ organizedStructure }),
+
+      // Collection
+      collectionId: null,
+      setCollectionId: (collectionId) => set({ collectionId }),
+
+      // Navigation
+      currentView: 'landing',
+      setCurrentView: (currentView) => set({ currentView }),
+
+      // Reset
+      reset: () =>
+        set({
+          files: [],
+          isProcessing: false,
+          processingMessage: '',
+          progress: 0,
+          organizedStructure: null,
+          collectionId: null,
+          currentView: 'landing',
+        }),
+
+      // Settings
+      settings: {
+        cursorTrail: true,
+        particles: true,
+        clientSideProcessing: true,
+        saveHistory: true,
+      },
+      toggleSetting: (key) =>
+        set((state) => ({
+          settings: { ...state.settings, [key]: !state.settings[key] },
+        })),
+    }),
+    {
+      name: 'lumina-storage',
+      partialize: (state) => ({ settings: state.settings }),
+    }
+  )
+)

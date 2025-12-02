@@ -36,7 +36,12 @@ cd ..
 echo ""
 echo "📦 Installing server dependencies..."
 cd server
-python3 -m pip install -r requirements.txt
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+source venv/bin/activate
+pip install -r requirements.txt
 cd ..
 
 # Create .env files if they don't exist
@@ -46,7 +51,7 @@ echo "⚙️ Setting up configuration..."
 if [ ! -f "server/.env" ]; then
     echo "Creating server/.env from example..."
     cp server/.env.example server/.env
-    echo "⚠️ Don't forget to add your OPENAI_API_KEY to server/.env"
+    echo "⚠️ Don't forget to configure server/.env"
 fi
 
 if [ ! -f "client/.env" ]; then
@@ -58,7 +63,7 @@ echo ""
 echo "✨ Installation complete!"
 echo ""
 echo "Next steps:"
-echo "1. Edit server/.env and add your OPENAI_API_KEY"
+echo "1. Edit server/.env and configure Ollama settings"
 echo "2. Run 'npm run dev' to start both servers"
 echo "3. Visit http://localhost:3000"
 echo ""

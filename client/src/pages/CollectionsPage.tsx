@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { FolderOpen, Calendar, Files } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { FolderOpen, Calendar, Files, Download } from 'lucide-react'
 import { OrbitalMenu } from '../components/OrbitalMenu'
 import { GlassCard } from '../components/GlassCard'
-import { getAllCollections } from '../utils/api'
+import { OrbButton } from '../components/OrbButton'
+import { getAllCollections, getCollection } from '../utils/api'
+import { useStore } from '../store/useStore'
+import JSZip from 'jszip'
 
 export function CollectionsPage() {
+  const navigate = useNavigate()
+  const { setFiles, setOrganizedStructure, setCollectionId } = useStore()
   const [collections, setCollections] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
   useEffect(() => {
     loadCollections()
@@ -24,11 +31,66 @@ export function CollectionsPage() {
     }
   }
 
+  const handleViewCollection = async (collectionId: string) => {
+    try {
+      const data = await getCollection(collectionId)
+      setOrganizedStructure(data.organized_structure)
+      setCollectionId(collectionId)
+      navigate('/preview')
+    } catch (error) {
+      console.error('Error loading collection:', error)
+    }
+  }
+
+  const handleDownloadCollection = async (collectionData: any, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    
+    try {
+      setDownloadingId(collectionData.collection_id)
+      
+      // Fetch full collection data
+      const data = await getCollection(collectionData.collection_id)
+      const organizedStructure = data.organized_structure
+
+      const zip = new JSZip()
+
+      // Add files to ZIP according to organized structure
+      for (const category of Object.keys(organizedStructure)) {
+        for (const subcategory of Object.keys(organizedStructure[category])) {
+          for (const folder of Object.keys(organizedStructure[category][subcategory])) {
+            const fileList = organizedStructure[category][subcategory][folder]
+
+            for (const file of fileList) {
+              const path = `${category}/${subcategory}/${folder}/${file.name}`
+              // Create placeholder for files (actual content not stored in DB)
+              zip.file(path, `File: ${file.name}\nSize: ${file.size} bytes\nType: ${file.type}`)
+            }
+          }
+        }
+      }
+
+      // Generate and download
+      const blob = await zip.generateAsync({ type: 'blob' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `lumina-collection-${collectionData.collection_id.slice(0, 8)}.zip`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading collection:', error)
+    } finally {
+      setDownloadingId(null)
+    }
+  }
+
   return (
     <div className="relative w-full min-h-screen">
       <OrbitalMenu />
 
-      <div className="container mx-auto px-8 py-16 max-w-6xl">
+      <div className="container mx-auto pl-32 pr-8 py-16">
         {/* Header */}
         <motion.div
           className="text-center mb-12"
@@ -57,7 +119,12 @@ export function CollectionsPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <GlassCard hover glowColor={index % 2 === 0 ? 'violet' : 'cyan'} className="p-6">
+                <GlassCard 
+                  hover 
+                  glowColor={index % 2 === 0 ? 'violet' : 'cyan'} 
+                  className="p-6 cursor-pointer"
+                  onClick={() => handleViewCollection(collection.collection_id)}
+                >
                   <div className="mb-4">
                     <FolderOpen className="w-12 h-12 text-cosmic-cyan mb-3" />
                     <h3 className="text-xl font-bold mb-2">
@@ -94,6 +161,20 @@ export function CollectionsPage() {
                         +{collection.categories.length - 3}
                       </span>
                     )}
+                  </div>
+
+                  {/* Download Button */}
+                  <div className="mt-4 pt-4 border-t border-white/10">
+                    <OrbButton
+                      size="sm"
+                      variant="primary"
+                      onClick={(e) => handleDownloadCollection(collection, e)}
+                      disabled={downloadingId === collection.collection_id}
+                      className="w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      {downloadingId === collection.collection_id ? 'Downloading...' : 'Download ZIP'}
+                    </OrbButton>
                   </div>
                 </GlassCard>
               </motion.div>

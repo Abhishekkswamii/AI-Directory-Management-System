@@ -39,7 +39,12 @@ REM Install server dependencies
 echo.
 echo 📦 Installing server dependencies...
 cd server
-python -m pip install -r requirements.txt
+if not exist "venv" (
+    echo Creating virtual environment...
+    python -m venv venv
+)
+call venv\Scripts\activate
+pip install -r requirements.txt
 cd ..
 
 REM Create .env files if they don't exist
@@ -49,7 +54,7 @@ echo ⚙️ Setting up configuration...
 if not exist "server\.env" (
     echo Creating server\.env from example...
     copy server\.env.example server\.env >nul
-    echo ⚠️ Don't forget to add your OPENAI_API_KEY to server\.env
+    echo ⚠️ Don't forget to configure server\.env
 )
 
 if not exist "client\.env" (
@@ -61,7 +66,7 @@ echo.
 echo ✨ Installation complete!
 echo.
 echo Next steps:
-echo 1. Edit server\.env and add your OPENAI_API_KEY
+echo 1. Edit server\.env and configure Ollama settings
 echo 2. Run 'npm run dev' to start both servers
 echo 3. Visit http://localhost:3000
 echo.

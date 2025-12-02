@@ -1,7 +1,19 @@
 import axios from 'axios'
 import { FileItem, OrganizedStructure } from '../store/useStore'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://127.0.0.1:8000' : 'http://localhost:8000')
+// Detect if running in Electron
+const isElectron = typeof navigator !== 'undefined' && navigator.userAgent.toLowerCase().includes('electron')
+
+// @ts-ignore - Vite injects this
+const API_BASE_URL = import.meta.env?.VITE_API_URL ||
+  (isElectron ? 'http://localhost:8001' : '')
+
+console.log('[API Config]', {
+  isElectron,
+  API_BASE_URL,
+  VITE_API_URL: import.meta.env?.VITE_API_URL,
+  userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'
+})
 
 const api = axios.create({
   baseURL: API_BASE_URL,
