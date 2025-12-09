@@ -30,7 +30,6 @@
 - 🔍 **Semantic Search** - Find files using natural language
 - 📦 **Export Options** - Download as ZIP or write back to file system
 - 🌐 **Dual AI Support** - Choose between local (Ollama) or cloud (Gemini) AI
-- 🔒 **Privacy-First** - Client-side file processing
 - 📱 **Responsive Design** - Works on desktop and mobile
 - 🗄️ **Collection History** - View and manage past organizations
 
