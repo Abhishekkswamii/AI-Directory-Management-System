@@ -5,7 +5,7 @@ const fsSync = require('fs');
 
 let mainWindow;
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
@@ -20,12 +20,46 @@ function createWindow() {
     },
   });
 
-  // Load the app
+  // Load the app - try dev server first, fallback to production build
+  const devServerUrl = 'http://localhost:5173';
+  const distPath = path.join(__dirname, '../client/dist/index.html');
+  
+  // Check if dev server is running
+  let useDevServer = false;
   if (process.env.NODE_ENV === 'development') {
-    mainWindow.loadURL('http://localhost:5173');
+    useDevServer = true;
+  } else {
+    // Auto-detect if dev server is running
+    try {
+      const http = require('http');
+      await new Promise((resolve, reject) => {
+        const req = http.get(devServerUrl, (res) => {
+          useDevServer = true;
+          resolve();
+        });
+        req.on('error', () => reject());
+        req.setTimeout(1000, () => {
+          req.destroy();
+          reject();
+        });
+      });
+    } catch (err) {
+      useDevServer = false;
+    }
+  }
+
+  if (useDevServer) {
+    console.log('Loading from dev server:', devServerUrl);
+    mainWindow.loadURL(devServerUrl);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../client/dist/index.html'));
+    console.log('Loading from production build:', distPath);
+    if (fsSync.existsSync(distPath)) {
+      mainWindow.loadFile(distPath);
+    } else {
+      console.error('Production build not found. Please run "npm run build" in the client directory first.');
+      mainWindow.loadURL(`data:text/html,<html><body style="font-family: Arial; padding: 40px; background: #1a1a1a; color: #fff;"><h1>⚠️ Build Missing</h1><p>The production build was not found.</p><p><strong>To fix this:</strong></p><ol><li>Make sure the Vite dev server is running: <code>npm run dev</code> in the client directory</li><li>Or build the production version: <code>npm run build</code> in the client directory</li></ol><p>Dev server URL: <a href="${devServerUrl}" style="color: #6366f1;">${devServerUrl}</a></p></body></html>`);
+    }
   }
 
   mainWindow.on('closed', () => {

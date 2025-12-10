@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Search as SearchIcon, Sparkles, File } from 'lucide-react'
+import { Search as SearchIcon, Sparkles, File, FolderOpen } from 'lucide-react'
 import { OrbitalMenu } from '../components/OrbitalMenu'
 import { GlassCard } from '../components/GlassCard'
 import { searchCollections } from '../utils/api'
@@ -91,31 +91,54 @@ export function SearchPage() {
               Found {results.length} results
             </h2>
 
-            {results.map((file, index) => (
-              <motion.div
-                key={file.id || index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <GlassCard hover className="p-6">
-                  <div className="flex items-center gap-4">
-                    <File className="w-8 h-8 text-cosmic-cyan" />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{file.name}</h3>
-                      <p className="text-sm text-white/60">
-                        {file.type}
-                        {file.size && ` • ${(file.size / 1024).toFixed(1)} KB`}
-                      </p>
+            {results.map((file, index) => {
+              // Extract folder path from full path
+              const pathParts = file.path ? file.path.split('/') : []
+              const folderPath = pathParts.length > 1 
+                ? pathParts.slice(0, -1).join(' / ') 
+                : 'Root'
+              
+              return (
+                <motion.div
+                  key={file.id || index}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <GlassCard hover className="p-6">
+                    <div className="flex items-start gap-4">
+                      <File className="w-8 h-8 text-cosmic-cyan flex-shrink-0 mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-lg mb-2 truncate">{file.name}</h3>
+                        
+                        {/* File details */}
+                        <div className="flex items-center gap-3 text-sm text-white/60 mb-2">
+                          <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10">
+                            .{file.type}
+                          </span>
+                          {file.size && (
+                            <span>{(file.size / 1024).toFixed(1)} KB</span>
+                          )}
+                        </div>
+
+                        {/* Folder location */}
+                        {file.path && (
+                          <div className="flex items-center gap-2 text-sm mt-2 p-2 rounded-lg bg-cosmic-cyan/10 border border-cosmic-cyan/20">
+                            <FolderOpen className="w-4 h-4 text-cosmic-cyan flex-shrink-0" />
+                            <span className="text-cosmic-cyan font-medium">Location:</span>
+                            <span className="text-white/80 truncate">{folderPath}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-            ))}
+                  </GlassCard>
+                </motion.div>
+              )
+            })}
           </motion.div>
         )}
 
-        {/* Empty state */}
+        {/* Empty state after search */}
         {!isSearching && results.length === 0 && query && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -123,7 +146,28 @@ export function SearchPage() {
             className="text-center py-16"
           >
             <SearchIcon className="w-16 h-16 text-white/20 mx-auto mb-4" />
-            <p className="text-white/60">No results found. Try a different query.</p>
+            <p className="text-white/60 mb-2">No results found for "{query}"</p>
+            <p className="text-white/40 text-sm">Try a different query or make sure you've organized files first.</p>
+          </motion.div>
+        )}
+
+        {/* Initial hint */}
+        {!isSearching && results.length === 0 && !query && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-16"
+          >
+            <GlassCard glowColor="violet" className="p-8 max-w-2xl mx-auto">
+              <Sparkles className="w-16 h-16 text-cosmic-violet mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-3">How Search Works</h3>
+              <div className="text-white/70 space-y-2 text-left">
+                <p>🔍 <strong>Semantic Search:</strong> Search by meaning, not just keywords</p>
+                <p>📁 <strong>File Location:</strong> Each result shows exactly which folder contains the file</p>
+                <p>✨ <strong>AI-Powered:</strong> Understands context and finds relevant files</p>
+                <p className="pt-2 text-cosmic-cyan">💡 <em>Tip: Organize some files first to enable search!</em></p>
+              </div>
+            </GlassCard>
           </motion.div>
         )}
       </div>

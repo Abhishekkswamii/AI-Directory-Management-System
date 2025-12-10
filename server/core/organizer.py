@@ -72,7 +72,7 @@ class FileOrganizer:
 
             # Add to vector store
             if self.collection and files:
-                await self._add_to_vector_store(files, collection_id)
+                await self._add_to_vector_store(files, collection_id, organized_structure)
 
             print(f"✅ Saved collection {collection_id} with {len(files)} files")
             return collection_id
@@ -96,7 +96,7 @@ class FileOrganizer:
                         }
         return {}
 
-    async def _add_to_vector_store(self, files: List[Dict[str, Any]], collection_id: str):
+    async def _add_to_vector_store(self, files: List[Dict[str, Any]], collection_id: str, structure: Dict[str, Any]):
         """Add files to ChromaDB vector store"""
         if not self.collection:
             return
@@ -110,24 +110,40 @@ class FileOrganizer:
 
             for file in files:
                 if file.get("embedding"):
-                    ids.append(f"{collection_id}_{file['id']}")
-                    embeddings.append(file["embedding"])
+                    try:
+                        ids.append(f"{collection_id}_{file['id']}")
+                        embeddings.append(file["embedding"])
 
-                    # Document text
-                    doc = f"{file['name']} {file.get('extractedText', '')[:500]}"
-                    documents.append(doc)
+                        # Document text
+                        doc = f"{file['name']} {file.get('extractedText', '')[:500]}"
+                        documents.append(doc)
 
-                    # Metadata
-                    metadatas.append(
-                        {
-                            "collection_id": collection_id,
-                            "file_id": file["id"],
-                            "name": file["name"],
-                            "path": file.get("path", ""),
-                            "type": file["type"],
-                            "size": file.get("size", 0),
-                        }
-                    )
+                        # Find organized location for this file
+                        location = self._find_file_location(file, structure)
+                        organized_path = file.get("path", "")
+                        
+                        # If file is in organized structure, build the organized path
+                        if location:
+                            category = location.get('category', '')
+                            subcategory = location.get('subcategory', '')
+                            folder = location.get('folder', '')
+                            organized_path = f"{category}/{subcategory}/{folder}"
+
+                        # Metadata
+                        metadatas.append(
+                            {
+                                "collection_id": collection_id,
+                                "file_id": file["id"],
+                                "name": file["name"],
+                                "path": organized_path,
+                                "original_path": file.get("path", ""),
+                                "type": file["type"],
+                                "size": file.get("size", 0),
+                            }
+                        )
+                    except Exception as e:
+                        print(f"Error processing file {file.get('name', 'unknown')}: {e}")
+                        continue
 
             if ids:
                 self.collection.add(

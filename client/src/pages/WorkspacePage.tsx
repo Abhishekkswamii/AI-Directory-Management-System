@@ -270,7 +270,7 @@ export function WorkspacePage() {
               Upload Your Files
             </h1>
             <p className="text-base text-white/70">
-              Drop a folder, select files, or choose a directory to begin the magic
+              Drop a folder or choose a directory to begin the magic
             </p>
           </motion.div>
 
@@ -358,28 +358,17 @@ export function WorkspacePage() {
 
                         <h2 className="text-2xl font-bold mb-3 text-white">Drop Your Folder Here</h2>
                         <p className="text-white/60 mb-6 text-base">
-                          Or use one of the options below
+                          Or click below to browse
                         </p>
 
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                          {isFileSystemAccessSupported() && (
-                            <OrbButton
-                              size="lg"
-                              variant="primary"
-                              onClick={handleDirectoryPicker}
-                            >
-                              <FolderOpen className="w-5 h-5 mr-2" />
-                              Choose Directory
-                            </OrbButton>
-                          )}
-
+                        <div className="flex justify-center">
                           <OrbButton
                             size="lg"
-                            variant="secondary"
-                            onClick={() => fileInputRef.current?.click()}
+                            variant="primary"
+                            onClick={isFileSystemAccessSupported() ? handleDirectoryPicker : () => fileInputRef.current?.click()}
                           >
-                            <Upload className="w-5 h-5 mr-2" />
-                            Select Files
+                            <FolderOpen className="w-5 h-5 mr-2" />
+                            Choose Directory
                           </OrbButton>
                         </div>
 
