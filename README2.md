@@ -9,7 +9,7 @@ This guide contains the exact commands used to set up and run the LUMINA AI-Powe
 - **Node.js** 18 or higher
 - **Python** 3.11 or higher
 - **Git**
-- **Ollama** (for local AI) or **Gemini API Key** (for cloud AI)
+- **Ollama** (for local AI) or **Gemini API Key**
 
 ---
 
