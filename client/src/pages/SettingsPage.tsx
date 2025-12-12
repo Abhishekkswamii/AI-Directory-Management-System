@@ -64,9 +64,10 @@ export function SettingsPage() {
     saveAiSettings(newProvider)
   }
 
-  const Toggle = ({ active, onToggle }: { active: boolean; onToggle: () => void }) => (
+  const Toggle = ({ active, onToggle, label }: { active: boolean; onToggle: () => void; label: string }) => (
     <button
       onClick={onToggle}
+      aria-label={label}
       className={clsx(
         'w-12 h-6 rounded-full relative transition-colors duration-300 border-2',
         active ? 'bg-cosmic-violet border-cosmic-violet shadow-[0_0_15px_rgba(99,102,241,0.8)]' : 'bg-white/10 border-white/30'
@@ -229,6 +230,7 @@ export function SettingsPage() {
                   <Toggle
                     active={settings.clientSideProcessing}
                     onToggle={() => toggleSetting('clientSideProcessing')}
+                    label="Toggle client-side processing"
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -236,6 +238,7 @@ export function SettingsPage() {
                   <Toggle
                     active={settings.saveHistory}
                     onToggle={() => toggleSetting('saveHistory')}
+                    label="Toggle save history"
                   />
                 </div>
               </div>
@@ -258,6 +261,7 @@ export function SettingsPage() {
                   <Toggle
                     active={settings.cursorTrail}
                     onToggle={() => toggleSetting('cursorTrail')}
+                    label="Toggle cosmic cursor trail"
                   />
                 </div>
                 <div className="flex items-center justify-between">
@@ -265,6 +269,7 @@ export function SettingsPage() {
                   <Toggle
                     active={settings.particles}
                     onToggle={() => toggleSetting('particles')}
+                    label="Toggle particle effects"
                   />
                 </div>
               </div>
