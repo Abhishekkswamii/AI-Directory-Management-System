@@ -165,7 +165,6 @@ export function SearchPage() {
                 <p>🔍 <strong>Semantic Search:</strong> Search by meaning, not just keywords</p>
                 <p>📁 <strong>File Location:</strong> Each result shows exactly which folder contains the file</p>
                 <p>✨ <strong>AI-Powered:</strong> Understands context and finds relevant files</p>
-                <p className="pt-2 text-cosmic-cyan">💡 <em>Tip: Organize some files first to enable search!</em></p>
               </div>
             </GlassCard>
           </motion.div>
